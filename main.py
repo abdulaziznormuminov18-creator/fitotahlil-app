@@ -18,13 +18,30 @@ client = Groq(api_key=GROQ_API_KEY)
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
-    welcome_text = (
-        "🌿 **FitoTahlil AI Botiga xush kelibsiz!**\n\n"
-        "Men uy gullari va o'simliklarining holatini sun'iy intellekt orqali tahlil qilib beraman.\n\n"
-        "📸 **Qanday foydalaniladi?**\n"
-        "Shunchaki gulning yoki uning bargining rasmini botga yuboring!"
+    markup = telebot.types.InlineKeyboardMarkup()
+
+    web_app = telebot.types.WebAppInfo(
+        url="https://abdulaziznormuminov18-creator.github.io/fitotahlil-app/"
     )
-    bot.reply_to(message, welcome_text, parse_mode="Markdown")
+
+    app_button = telebot.types.InlineKeyboardButton(
+        text="🌿 FitoTahlil AI ilovasini ochish",
+        web_app=web_app
+    )
+
+    markup.add(app_button)
+
+    welcome_text = (
+        "🌿 FitoTahlil AI botiga xush kelibsiz!\n\n"
+        "O‘simlik rasmini sun’iy intellekt yordamida tahlil qilish "
+        "uchun quyidagi tugmani bosing:"
+    )
+
+    bot.send_message(
+        message.chat.id,
+        welcome_text,
+        reply_markup=markup
+    )
 
 @bot.message_handler(content_types=['photo'])
 def handle_photo(message):
