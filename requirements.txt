@@ -1,4 +1,6 @@
 pyTelegramBotAPI
 groq
 python-dotenv
-requests
+Flask
+flask-cors
+gunicorn
