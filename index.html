@@ -488,13 +488,86 @@
     window.scrollTo(0,0);
   }
 
+  // ===== Mini App ichida AI diagnostika =====
+  const API_URL = 'https://fitotahlil-app.onrender.com/api/analyze';
+  let selectedImageFile = null;
+
   function sendToBot(){
-    if (tg) {
-      tg.close();
-    } else {
-      alert('Demo rejimi: bu tugma Telegram ichida botga qaytaradi, u yerda rasm yuborasiz.');
+    let input = document.getElementById('miniapp-image-input');
+    if (!input) {
+      input = document.createElement('input');
+      input.id = 'miniapp-image-input';
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.capture = 'environment';
+      input.style.display = 'none';
+      input.addEventListener('change', handleMiniAppImage);
+      document.body.appendChild(input);
+    }
+    input.click();
+  }
+
+  async function handleMiniAppImage(event){
+    const file = event.target.files && event.target.files[0];
+    event.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { alert('Iltimos, rasm tanlang.'); return; }
+    if (file.size > 10 * 1024 * 1024) { alert('Rasm hajmi 10 MB dan kichik bo‘lishi kerak.'); return; }
+
+    selectedImageFile = file;
+    showAnalysisLoading();
+    const form = new FormData();
+    form.append('image', file);
+
+    try {
+      const response = await fetch(API_URL, { method: 'POST', body: form });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || 'Tahlil amalga oshmadi');
+      showAnalysisResult(data.result, file);
+    } catch (error) {
+      showAnalysisError('Server javob bermadi. Birozdan keyin qayta urinib ko‘ring.');
+      console.error(error);
     }
   }
+
+  function analysisBox(){
+    let box = document.getElementById('analysis-result-box');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'analysis-result-box';
+      box.style.cssText = 'position:fixed;inset:0;z-index:99;background:rgba(21,43,30,.72);display:none;padding:18px;overflow:auto;';
+      box.innerHTML = '<div id="analysis-result-card" style="max-width:420px;margin:35px auto;background:#fff;border-radius:22px;padding:20px;box-shadow:0 12px 40px rgba(0,0,0,.3);"></div>';
+      document.body.appendChild(box);
+    }
+    return box;
+  }
+
+  function showAnalysisLoading(){
+    const box = analysisBox(); box.style.display = 'block';
+    document.getElementById('analysis-result-card').innerHTML = '<div style="text-align:center;padding:35px 10px"><div style="font-size:42px">🌿</div><h3>AI tahlil qilmoqda...</h3><p style="color:#4A5C50">Rasm tekshirilmoqda, iltimos kuting.</p></div>';
+  }
+
+  function showAnalysisError(message){
+    const box = analysisBox(); box.style.display = 'block';
+    document.getElementById('analysis-result-card').innerHTML = '<h2>⚠️ Xatolik</h2><p>' + message + '</p><button class="btn-primary" onclick="closeAnalysis()">Yopish</button>';
+  }
+
+  function showAnalysisResult(result, file){
+    const box = analysisBox(); box.style.display = 'block';
+    const safe = String(result).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+    document.getElementById('analysis-result-card').innerHTML = '<h2 style="color:#1F3D2B">📋 Tahlil natijasi</h2><div style="white-space:pre-wrap;line-height:1.55;font-size:13px;color:#16241C">' + safe + '</div><div style="display:flex;gap:8px;margin-top:18px"><button class="btn-primary" onclick="saveAnalysis()">💾 Saqlash</button><button class="btn-ghost" onclick="closeAnalysis()">Yopish</button></div><p style="font-size:11px;color:#4A5C50;margin-top:14px">Tahlilni “Mening o‘simliklarim” bo‘limiga saqlaysizmi?</p>';
+    window.lastAnalysis = { result: result, date: new Date().toLocaleString('uz-UZ'), name: file.name };
+  }
+
+  function saveAnalysis(){
+    const items = JSON.parse(localStorage.getItem('fitotahlil_history') || '[]');
+    items.unshift(window.lastAnalysis);
+    localStorage.setItem('fitotahlil_history', JSON.stringify(items.slice(0,20)));
+    alert('✅ Tahlil “Mening o‘simliklarim” bo‘limiga saqlandi.');
+    closeAnalysis();
+  }
+
+  function closeAnalysis(){ const box = document.getElementById('analysis-result-box'); if (box) box.style.display = 'none'; }
 
   // ===== Ob-havo — bepul Open-Meteo API (kalit talab qilmaydi) =====
   function weatherEmoji(code){
