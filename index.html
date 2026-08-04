@@ -513,13 +513,76 @@
     input.click();
   }
 
-  async function handleMiniAppImage(event){
-    const file = event.target.files && event.target.files[0];
-    event.target.value = '';
-    if (!file) return;
-    if (!file.type.startsWith('image/')) { alert('Iltimos, rasm tanlang.'); return; }
-    if (file.size > 10 * 1024 * 1024) { alert('Rasm hajmi 10 MB dan kichik bo‘lishi kerak.'); return; }
+ async function saveAnalysis(){
+  const aiText = String(window.lastAnalysis?.result || '');
 
+  // AI javobidan o‘simlik nomini topishga harakat qiladi
+  function detectPlantName(text){
+    const patterns = [
+      /O['’`‘]simlik nomi\s*:\s*([^\n]+)/i,
+      /O['’`‘]simlik\s*:\s*([^\n]+)/i,
+      /Plant name\s*:\s*([^\n]+)/i
+    ];
+
+    for (const pattern of patterns){
+      const match = text.match(pattern);
+
+      if (match && match[1]){
+        return match[1]
+          .replace(/\*/g, '')
+          .replace(/^[：:–—-]\s*/, '')
+          .trim();
+      }
+    }
+
+    return '';
+  }
+
+  const detectedName = detectPlantName(aiText);
+
+  const enteredName = prompt(
+    'O‘simlik nomini kiriting.\n'
+    + 'Bo‘sh qoldirsangiz, AI aniqlagan nom ishlatiladi:',
+    ''
+  );
+
+  // Cancel bosilsa, saqlash bekor qilinadi
+  if (enteredName === null){
+    return;
+  }
+
+  const finalName =
+    enteredName.trim() ||
+    detectedName ||
+    'Noma’lum o‘simlik';
+
+  const imageData = await compressImage(selectedImageFile);
+
+  const item = {
+    ...window.lastAnalysis,
+    name: finalName,
+    image: imageData,
+    savedAt: Date.now()
+  };
+
+  const items = JSON.parse(
+    localStorage.getItem('fitotahlil_history') || '[]'
+  );
+
+  items.unshift(item);
+
+  localStorage.setItem(
+    'fitotahlil_history',
+    JSON.stringify(items.slice(0, 20))
+  );
+
+  renderHistory();
+
+  alert('✅ “' + finalName + '” saqlandi.');
+
+  closeAnalysis();
+  goTo('myplants');
+}
     selectedImageFile = file;
     showAnalysisLoading();
     const form = new FormData();
