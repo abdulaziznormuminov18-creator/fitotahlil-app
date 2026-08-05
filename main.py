@@ -93,6 +93,26 @@ Quyidagi tartibdan foydalaning:
 8. Qayta tekshirish:
    Necha kundan keyin yana rasmga olish kerakligi.
 
+   9. Sug‘orish jadvali:
+   Sug‘orish tavsiyasini o‘simlik turi va uning hozirgi holatiga qarab belgilang.
+
+   Quyidagilarni aniq yozing:
+   - Bugun sug‘orish kerakmi: Ha yoki Yo‘q;
+   - Suv miqdori: taxminiy miqdor;
+   - Keyingi sug‘orish: necha kundan keyin;
+   - Sug‘orish oralig‘i: masalan, har 2 kunda yoki tuproq quriganda;
+   - Sug‘orishni ko‘paytirish, kamaytirish yoki vaqtincha to‘xtatish kerakmi;
+   - Tavsiyaning sababi.
+
+   O‘simlik sog‘lom bo‘lsa, odatiy jadval bering.
+   Suvsizlanish belgilari bo‘lsa, sug‘orishni tezlashtiring.
+   Ortiqcha namlik yoki ildiz chirishi belgilari bo‘lsa,
+   sug‘orishni kamaytiring yoki vaqtincha to‘xtating.
+
+   Ob-havo ma’lumotidan foydalaning:
+   issiq va quruq havoda sug‘orish oralig‘ini qisqartiring,
+   salqin yoki nam havoda esa uzaytiring.
+
 Javobning oxirida:
 "Bu dastlabki AI tahlilidir. Jiddiy holatlarda agronom bilan maslahatlashish tavsiya etiladi."
 deb yozing.
