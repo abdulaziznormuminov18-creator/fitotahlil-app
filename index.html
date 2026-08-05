@@ -341,13 +341,15 @@
       </div>
 
       <div class="section-label">Bugungi parvarish <a onclick="goTo('myplants')">Barchasi →</a></div>
-      <div class="care-card">
-        <div>
-          <div class="ct-title">Sug'orish</div>
-          <div class="ct-sub">Bugun 0 ta o'simlikka suv kerak</div>
-        </div>
-        <div class="ct-emoji">💧</div>
-      </div>
+      <div class="care-card" id="today-care-card">
+  <div>
+    <div class="ct-title">Sug'orish</div>
+    <div class="ct-sub" id="today-care-text">
+      Saqlangan o'simliklar uchun jadval tayyorlanmoqda...
+    </div>
+  </div>
+  <div class="ct-emoji">💧</div>
+</div>
 
       <div class="section-label">Mashhur o'simliklar <span style="color:var(--forest); font-weight:600;">O'zbekiston</span></div>
       <div class="carousel">
@@ -767,6 +769,55 @@
   else if (hour < 12) greetEl.textContent = "Xayrli tong 🌤";
   else if (hour < 18) greetEl.textContent = "Xayrli kun 🌿";
   else greetEl.textContent = "Xayrli kech 🌙";
+  function updateTodayCare(){
+  const textEl = document.getElementById('today-care-text');
+
+  if (!textEl) {
+    return;
+  }
+
+  const items = JSON.parse(
+    localStorage.getItem('fitotahlil_history') || '[]'
+  );
+
+  if (!items.length) {
+    textEl.textContent =
+      "Hali saqlangan o'simliklar yo'q";
+    return;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const needWater = items.filter(function(item){
+    if (!item.nextWatering) {
+      return false;
+    }
+
+    const nextDate = new Date(item.nextWatering);
+    nextDate.setHours(0, 0, 0, 0);
+
+    return nextDate <= today;
+  });
+
+  if (!needWater.length) {
+    textEl.textContent =
+      "Bugun hech qaysi o'simlikka suv kerak emas";
+    return;
+  }
+
+  const names = needWater
+    .slice(0, 3)
+    .map(function(item){
+      return "• " + item.name;
+    })
+    .join("<br>");
+
+  textEl.innerHTML =
+    "Bugun suv kerak:<br>" + names;
+}
+
+updateTodayCare();
 </script>
 
 </body>
