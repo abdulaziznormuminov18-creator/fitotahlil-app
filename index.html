@@ -465,9 +465,9 @@
         </div>
         <div class="tool-card" onclick="showSavedCategory('pest')"><div class="tool-icon" style="background:#F1E6FB;">🐛</div><div class="name">Zararkunanda ID</div><div class="desc">Hasharotlarni aniqlash</div></div>
         <div class="tool-card" onclick="showCalculator()"><div class="tool-icon" style="background:#E3F0FB;">💧</div><div class="name">Suv kalkulyatori</div><div class="desc">AI yordamida suv miqdori</div></div>
-        <div class="tool-card"><div class="tool-icon" style="background:#FBEEE3;">⚠️</div><div class="name">Zaharlilik tekshiruvi</div><div class="desc">Xavfsizlik nazorati</div></div>
+        <div class="tool-card" onclick="openSafety('toxicity')"><div class="tool-icon" style="background:#FBEEE3;">⚠️</div><div class="name">Zaharlilik tekshiruvi</div><div class="desc">Xavfsizlik nazorati</div></div>
         <div class="tool-card" onclick="showFertilizerCalculator()"><div class="tool-icon" style="background:#E6F5EC;">🧪</div><div class="name">O‘g‘it va ozuqa kalkulyatori</div><div class="desc">AI mos miqdorni hisoblaydi</div></div>
-        <div class="tool-card"><div class="tool-icon" style="background:#FDF3D6;">💡</div><div class="name">Yorug'lik o'lchagich</div><div class="desc">Xona yorug'ligini kamera orqali o'lchaydi</div></div>
+        <div class="tool-card" onclick="openSafety('light')"><div class="tool-icon" style="background:#FDF3D6;">💡</div><div class="name">Yorug'lik o'lchagich</div><div class="desc">Kamera orqali AI baholaydi</div></div>
         <div class="tool-card" onclick="goTo('map')"><div class="tool-icon" style="background:#EAF0E4;">🗺</div><div class="name">Hudud xaritasi</div><div class="desc">Milliy statistika</div></div>
       </div>
 
@@ -710,6 +710,13 @@
     renderTasks(); updateTodayCare();
   }
 
+  function openSafety(mode){
+    selectedMode = mode;
+    const title = mode === 'light' ? '💡 Yorug‘lik o‘lchagich' : '⚠️ Zaharlilik tekshiruvi';
+    const box = analysisBox(); box.style.display = 'block';
+    document.getElementById('analysis-result-card').innerHTML = `<button class="btn-ghost" onclick="closeAnalysis();goTo('more')">‹ Orqaga</button><h2 style="color:#1F3D2B">${title}</h2><p>Rasm yuboring. AI tahlil qiladi.</p><button class="btn-primary" onclick="openCamera(selectedMode)">📷 Kamera</button> <button class="btn-ghost" onclick="openGallery(selectedMode)">🖼 Galereya</button>`;
+  }
+
   function showFertilizerCalculator(){
     const box = analysisBox(); box.style.display = 'block';
     document.getElementById('analysis-result-card').innerHTML = `<button class="btn-ghost" onclick="closeAnalysis();goTo('more')">‹ Orqaga</button><h2 style="color:#1F3D2B">🧪 O‘g‘it kalkulyatori</h2><p style="font-size:12px;color:#4A5C50">Ma’lumotlarni kiriting, AI mos o‘g‘it va miqdorni hisoblaydi.</p><input id="fert-plant" placeholder="🌿 O‘simlik nomi" style="width:100%;padding:11px;margin:5px 0;border:1px solid #DDE3D6;border-radius:10px"><input id="fert-d" type="number" placeholder="Tuvak diametri (sm)" style="width:100%;padding:11px;margin:5px 0;border:1px solid #DDE3D6;border-radius:10px"><input id="fert-h" type="number" placeholder="Tuvak balandligi (sm)" style="width:100%;padding:11px;margin:5px 0;border:1px solid #DDE3D6;border-radius:10px"><input id="fert-soil" type="number" step="0.1" placeholder="Tuproq hajmi (litr)" style="width:100%;padding:11px;margin:5px 0;border:1px solid #DDE3D6;border-radius:10px"><input id="fert-age" placeholder="O‘simlik yoshi (masalan: 2 oy)" style="width:100%;padding:11px;margin:5px 0;border:1px solid #DDE3D6;border-radius:10px"><input id="fert-condition" placeholder="O‘simlik holati" style="width:100%;padding:11px;margin:5px 0;border:1px solid #DDE3D6;border-radius:10px"><input id="fert-type" placeholder="O‘g‘it turi (bo‘sh qoldirish mumkin)" style="width:100%;padding:11px;margin:5px 0;border:1px solid #DDE3D6;border-radius:10px"><button class="btn-primary" onclick="calculateFertilizer()" style="margin-top:10px">🤖 AI hisoblash</button><div id="fert-result" style="margin-top:14px"></div>`;
@@ -858,10 +865,17 @@
       label = [place.city || place.locality, place.countryName]
         .filter(Boolean).join(' — ') || label;
     }catch(e){}
+    const saved = { lat, lon, label: label.toUpperCase(), savedAt: Date.now() };
+    localStorage.setItem('fitotahlil_location', JSON.stringify(saved));
     loadWeather(lat, lon, label.toUpperCase());
   }
 
   function locationError(){
+    const saved = JSON.parse(localStorage.getItem('fitotahlil_location') || 'null');
+    if (saved && saved.lat && saved.lon) {
+      loadWeather(saved.lat, saved.lon, saved.label || 'SAQLANGAN HUDUD');
+      return;
+    }
     document.getElementById('w-cond').textContent = 'Joylashuv ruxsati kerak';
     document.getElementById('w-location').textContent = 'JOYlashuv aniqlanmadi';
     document.getElementById('w-temp').innerHTML = '--<sup>°C</sup>';
@@ -870,12 +884,15 @@
     document.getElementById('w-uv').textContent = '--';
   }
 
-  // Faqat foydalanuvchining real joylashuvi ishlatiladi; Toshkent demo qiymati yo‘q.
-  if (navigator.geolocation){
+  // Joylashuv bir marta so‘raladi, keyingi kirishlarda saqlangan koordinata ishlatiladi.
+  const savedLocation = JSON.parse(localStorage.getItem('fitotahlil_location') || 'null');
+  if (savedLocation && savedLocation.lat && savedLocation.lon) {
+    loadWeather(savedLocation.lat, savedLocation.lon, savedLocation.label || 'SAQLANGAN HUDUD');
+  } else if (navigator.geolocation){
     navigator.geolocation.getCurrentPosition(
       loadRealLocation,
       locationError,
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 86400000 }
     );
   } else {
     locationError();
@@ -909,5 +926,5 @@
   else greetEl.textContent = "Xayrli kech 🌙";
 </script>
 
-</body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a26de49df84ab198',t:'MTc4NjAxNzc1MA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
