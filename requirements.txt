@@ -1,6 +1,0 @@
-pyTelegramBotAPI
-groq
-python-dotenv
-Flask
-flask-cors
-gunicorn
